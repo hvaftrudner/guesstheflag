@@ -16,6 +16,7 @@ class ViewController: UIViewController {
     
     var countries = [String]()
     var score: Int = 0
+    var highScore: Int = 0
     var correctAnswer: Int = 0
     var total: Int = 0
     
@@ -33,6 +34,14 @@ class ViewController: UIViewController {
         button1.layer.borderColor = UIColor.lightGray.cgColor
         button2.layer.borderColor = UIColor.lightGray.cgColor
         button3.layer.borderColor = UIColor.lightGray.cgColor
+        
+        let defaults = UserDefaults.standard
+        if let savedScore = defaults.value(forKey: "highScore") as? Int {
+            self.highScore = savedScore
+            print("loaded highscore : \(highScore)")
+        } else {
+            print("could not load highscore")
+        }
         
         askQuestion()
     }
@@ -54,28 +63,47 @@ class ViewController: UIViewController {
     @IBAction func buttonTapped(_ sender: UIButton) {
         var title: String
         
-        
         if sender.tag == correctAnswer {
             title = "Correct"
             score += 1
             total += 1
+            
+            
         } else {
             title = "Wrong! That was \(countries[sender.tag])"
             score -= 1
             total += 1
         }
         
+        if score < highScore {
+//
+        }
+        
         if total == 10 {
-            let newAc = UIAlertController(title: "Finished", message: "10 rounds have been played your score was \(score) out of 10", preferredStyle: .alert)
-            newAc.addAction(UIAlertAction(title: "Restart?", style: .default, handler: askQuestion))
-            present(newAc, animated: true)
-            
-            score = 0
+            if score > highScore {
+                highScore = score
+                save()
+                let highScoreAc = UIAlertController(title: "Highscore", message: "NEW High Score! \(highScore) of \(total)", preferredStyle: .alert)
+                highScoreAc.addAction(UIAlertAction(title: "Play again?", style: .default, handler: askQuestion))
+                present(highScoreAc, animated: true)
+                score = 0
+                total = 0
+                
+            } else {
+                let newAc = UIAlertController(title: "Finished", message: "10 rounds have been played your score was \(score) out of 10", preferredStyle: .alert)
+                newAc.addAction(UIAlertAction(title: "Restart?", style: .default, handler: askQuestion))
+                present(newAc, animated: true)
+                
+                score = 0
+                total = 0
+            }
             
         } else {
+            
             let ac = UIAlertController(title: title, message: "Your score is \(score)", preferredStyle: .alert)
             ac.addAction(UIAlertAction(title: "Continue", style: .default, handler: askQuestion))
             present(ac, animated: true)
+            
         }
         
         
@@ -88,6 +116,17 @@ class ViewController: UIViewController {
         let vc = UIActivityViewController(activityItems: [String("your score is \(score)")], applicationActivities: [])
         vc.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
         present(vc, animated: true)
+    }
+    
+    func save(){
+        let jsonEncoder = JSONEncoder()
+        
+        if let savedScore = try? jsonEncoder.encode(highScore){
+            let defaults = UserDefaults.standard
+            defaults.set(savedScore, forKey: "highScore")
+        } else {
+            print("failed to save score")
+        }
     }
 }
 
