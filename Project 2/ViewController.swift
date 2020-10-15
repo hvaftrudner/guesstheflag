@@ -62,6 +62,13 @@ class ViewController: UIViewController {
     
     @IBAction func buttonTapped(_ sender: UIButton) {
         var title: String
+        // animation button when pressed
+        UIView.animate(withDuration: 1, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 10, options: [], animations: {
+            sender.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            
+        }) { finished in
+            sender.transform = .identity
+        }
         
         if sender.tag == correctAnswer {
             title = "Correct"
@@ -75,9 +82,7 @@ class ViewController: UIViewController {
             total += 1
         }
         
-        if score < highScore {
-//
-        }
+       
         
         if total == 10 {
             if score > highScore {
