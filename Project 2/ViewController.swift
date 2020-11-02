@@ -5,10 +5,10 @@
 //  Created by Kristoffer Eriksson on 2020-08-28.
 //  Copyright © 2020 Kristoffer Eriksson. All rights reserved.
 //
-
+import UserNotifications
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UNUserNotificationCenterDelegate {
 
     @IBOutlet var button1: UIButton!
     @IBOutlet var button2: UIButton!
@@ -132,6 +132,80 @@ class ViewController: UIViewController {
         } else {
             print("failed to save score")
         }
+    }
+    
+    //:-- MARK UNnotificationCenter methods
+    func registerLocal(){
+        
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .badge, .sound]) {
+            granted, error in
+            if granted {
+                print("yahooo")
+            } else {
+                print("noooo")
+            }
+        }
+    }
+    
+   func scheduleLocal(){
+        registerLocal()
+        registerCategories()
+        
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        let content = UNMutableNotificationContent()
+        content.title = "Reminder to play"
+        content.body = "This is a reminder that lets you know that you should play everyday"
+        content.categoryIdentifier = "alarm"
+        content.userInfo = ["customData": "fizzbizz"]
+        content.sound = .default
+        
+        var dateComponent = DateComponents()
+        dateComponent.hour = 10
+        dateComponent.minute = 30
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponent, repeats: true)
+        
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        center.add(request)
+    }
+    
+    func registerCategories(){
+        let center = UNUserNotificationCenter.current()
+        center.delegate = self
+        
+        let show = UNNotificationAction(identifier: "show", title: "tell me more", options: .foreground)
+       
+        
+        let category = UNNotificationCategory(identifier: "alarm", actions: [show], intentIdentifiers: [], options: [])
+        center.setNotificationCategories([category])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        
+        let userInfo = response.notification.request.content.userInfo
+        if let customData = userInfo["customData"] as? String {
+            print("Custom data received \(customData)")
+            
+            switch response.actionIdentifier {
+            case UNNotificationDefaultActionIdentifier:
+                //user swiped to unlock
+                print("default identifier")
+                let ac = UIAlertController(title: "swiped", message: "to unlock", preferredStyle: .alert)
+                ac.addAction(UIAlertAction(title: "ok", style: .default) {_ in
+                    
+                    self.scheduleLocal()
+                })
+                present(ac, animated: true)
+                
+            
+            default:
+                break
+            }
+        }
+        completionHandler()
     }
 }
 
